@@ -5,7 +5,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import TextArea
 
 
-from test import HandleVimBindings
+from vim_bindings import HandleVimBindings
 
 
 
