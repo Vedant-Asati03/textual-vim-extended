@@ -5,7 +5,7 @@ Textual Vim Extended is a project aimed at enhancing the Vim text editor with ad
 
 ## Features
 - Enhanced text editing capabilities
-- Customizable key bindings
+g- Customizable key bindings
 - Improved syntax highlighting
 - Additional plugins and extensions
 - User-friendly interface enhancements
