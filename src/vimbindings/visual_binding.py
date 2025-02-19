@@ -2,6 +2,7 @@ class VISUALMODEBINDINGS:
     def V_mode(self):
         self.visual_mode_bindings = {
             "escape": lambda: self.enter_normal_mode(),
+            "ctrl+c": lambda: self.enter_normal_mode(),
             "ctrl+v": lambda: self.enter_visual_block_mode(block_visual_mode=True),
             "v": lambda: self.enter_normal_mode(),
             "V": lambda: self.enter_visual_line_mode(linewise_visual_mode=True),
@@ -9,22 +10,22 @@ class VISUALMODEBINDINGS:
             "l": lambda: self.action_cursor_right(True),
             "k": lambda: self.action_cursor_up(True),
             "j": lambda: self.action_cursor_down(True),
+            "w": lambda: self.action_cursor_word_right(True),
+            "b": lambda: self.action_cursor_word_left(True),
             "d": lambda: self.delete_selection(),
             "y": lambda: self.yank_selection(),
+            "p": lambda: self.paste_after_selection(),
             "c": lambda: self.change_selection(),
-            ">": lambda: self.indent_selection(),
-            "<": lambda: self.unindent_selection(),
-            "~": lambda: self.toggle_case_selection(),
+            # ">": lambda: self.indent_selection(),
+            # "<": lambda: self.unindent_selection(),
+            # "~": lambda: self.toggle_case_selection(),
             "u": lambda: self.lowercase_selection(),
             "U": lambda: self.uppercase_selection(),
-            "p": lambda: self.paste_over_selection(),
             "o": lambda: self.swap_selection_ends(),
             "gg": lambda: self.action_go_first_line(True),
             "G": lambda: self.action_go_last_line(True),
             "$": lambda: self.action_cursor_line_end(True),
             "^": lambda: self.action_cursor_line_start(True),
-            "w": lambda: self.word_right(True),
-            "b": lambda: self.word_left(True),
         }
 
         self.visual_line_mode_bindings = {
