@@ -1,4 +1,4 @@
-# Textual Vim Extended
+# Textual Vim Plugin
 
 ## Overview
 Textual Vim Extended is a project aimed at enhancing the Vim text editor with additional features and functionalities. This project extends the capabilities of Vim, making it more powerful and user-friendly for developers and text editors.
