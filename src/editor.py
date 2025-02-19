@@ -12,6 +12,8 @@ from .vimbindings.insert_binding import INSERTMODEBINDINGS
 from .vimbindings.visual_binding import VISUALMODEBINDINGS
 from .vimbindings.command_binding import COMMANDMODEBINDINGS
 from src.utils.cursor_movement import HandleCursorMovement
+from src.utils.cut_paste import ManageEditorsClipboard
+from .utils.macros import MacroRecorder
 
 
 class VimBindings(
@@ -32,6 +34,7 @@ class VimEditor(
     TextArea,
     CSS,
     HandleCursorMovement,
+    ManageEditorsClipboard,
     VimModes,
     VimBindings,
 ):
@@ -39,13 +42,47 @@ class VimEditor(
     mode: VimMode = VimMode.NORMAL
     current_sequence: str = ""
     command_history: dict[str, list[int]] = {}
+    clipboard: str = ""
+    _next_key_handler: callable = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.macro_recorder = MacroRecorder(self)
 
     def reset_sequence(self) -> None:
         """Resets the current key sequence after it's processed."""
         self.current_sequence = ""
 
+    def capture_next_key(self, handler: callable) -> None:
+        """Set up handler for next keypress.
+
+        Args:
+            handler: Callback function that takes a Key event
+        """
+        self._next_key_handler = handler
+
     def handle_mode_switch(self, event) -> None:
         """Process key events based on current mode."""
+        # Record key before any processing
+        should_record = (
+            self.macro_recorder.recording_macro
+            and self.mode == VimMode.NORMAL
+            and event.key != "q"
+            and not self._next_key_handler
+        )
+
+        if should_record:
+            self.macro_recorder.record_key(event.key)
+
+        if self._next_key_handler:
+            self._next_key_handler(event)
+            self._next_key_handler = None
+            event.prevent_default()
+            return
+# TODO: handle entering visual mode with cursor selection
+        # if self.selected_text:
+        #     self.mode = VimMode.VISUAL
+
         match self.mode:
             case VimMode.COMMAND:
                 if event.key in self.command_mode_bindings:
@@ -66,11 +103,12 @@ class VimEditor(
                 command, repeat = self.get_command_from_sequence()
 
                 if command in self.normal_mode:
-                    self.read_only = False
-                    self._record_command(command, repeat)
+                    # Record the complete command after confirming it's valid
+                    if should_record:
+                        self.macro_recorder.record_key(command)
 
-                    for _ in range(repeat):
-                        self.normal_mode[command]()
+                    # Execute the command
+                    self.normal_mode[command]()
 
                     if command not in list("iIoOaA"):
                         self.read_only = True
@@ -164,7 +202,9 @@ class VimEditor(
         self.handle_mode_switch(event)
 
         row, col = self.cursor_location
-        if self.mode == VimMode.COMMAND:
-            self.border_title = f"{self.command_buffer} │ [{row + 1}:{col + 1}]"
-        else:
-            self.border_title = f"[ {event.key} ][{row + 1}:{col + 1}]"
+
+        show_selected = (
+            f"Selected({len(self.selected_text)}) " if self.selected_text else ""
+        )
+
+        self.border_title = f"{show_selected}[ {event.key} ][{row + 1}:{col + 1}]"
