@@ -5,8 +5,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import TextArea
 
 
-from vim_bindings import HandleVimBindings
-
+from src.editor import VimEditor
 
 
 class AutoComplete(TextArea):
@@ -20,7 +19,7 @@ class AutoComplete(TextArea):
             event.prevent_default()
 
 
-class CustomTextArea(AutoComplete, HandleVimBindings):
+class CustomTextArea(AutoComplete, VimEditor):
     pass
 
 
@@ -48,9 +47,13 @@ Screen {
         super().__init__()
 
     def compose(self) -> ComposeResult:
-        input_box = CustomTextArea(show_line_numbers=True, id="input-box", language="go",
-                                   tab_behavior="indent",
-                                   theme="dracula")
+        input_box = CustomTextArea(
+            show_line_numbers=True,
+            id="input-box",
+            language="go",
+            tab_behavior="indent",
+            theme="dracula",
+        )
 
         yield Horizontal(input_box)
 
