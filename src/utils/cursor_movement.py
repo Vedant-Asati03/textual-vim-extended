@@ -1,3 +1,6 @@
+"""Custom defined cursor movements, bindings which are not available in textual for a specific cursor movemoent."""
+
+
 class HandleCursorMovement:
     def cursor_location_cache(self) -> tuple[int, int]:
         """Cache and return the current cursor location."""
@@ -5,50 +8,17 @@ class HandleCursorMovement:
 
     def move_to_first_non_blank(self) -> None:
         """Move cursor to first non-blank character in line."""
-        row, col = self.get_cursor_line_start_location(smart_home=True)
-        self.cursor_location = (row, col)
+        self.cursor_location = self.get_cursor_line_start_location(smart_home=True)
 
     def move_to_matching_bracket(self) -> None:
         """Move to matching bracket (%)."""
-        row, col = self.cursor_location
-        line = self.lines[row]
-        if col >= len(line):
-            return
-
-        brackets = {'(': ')', '[': ']', '{': '}', 
-                   ')': '(', ']': '[', '}': '{'}
-        char = line[col]
-        
-        if char not in brackets:
-            return
-
-        matching = brackets[char]
-        stack = []
-        
-        if char in '({[':  # Forward search
-            for i, c in enumerate(line[col:]):
-                if c == char:
-                    stack.append(c)
-                elif c == matching:
-                    stack.pop()
-                    if not stack:
-                        self.move_cursor((row, col + i))
-                        break
-        else:  # Backward search
-            for i, c in enumerate(reversed(line[:col + 1])):
-                if c == char:
-                    stack.append(c)
-                elif c == matching:
-                    stack.pop()
-                    if not stack:
-                        self.move_cursor((row, col - i))
-                        break
+        self.cursor_location = self.matching_bracket_location
 
     def jump_backwards_to_end_of_word(self) -> None:
         """Move cursor to end of previous word (ge)."""
         row, col = self.cursor_location
         line = self.lines[row]
-        
+
         # Find the previous word boundary
         text_before = line[:col]
         if not text_before.strip():
@@ -109,3 +79,8 @@ class HandleCursorMovement:
             (height - 1),
         )
         self.move_cursor(target)
+
+    def left_curly_bracket(self) -> None:
+        """Move cursor to previous paragraph."""
+        row, _ = self.cursor_location
+        
