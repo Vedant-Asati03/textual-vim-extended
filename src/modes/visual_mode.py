@@ -31,55 +31,10 @@ class VisualMode(BaseMode):
         end = (row, len(self.lines[row]))
         self.select(start, end)
 
-    def delete_selection(self) -> None:
-        """Delete the current selection based on selection mode."""
-        self.action_delete_left()
-        self.selection = Selection()
-        self.enter_normal_mode()
-
-    def yank(self) -> None: ...
-
     def yank_selection(self) -> None:
-        """Copy the current selection based on selection mode."""
-        if not self.selection or self.selection.start == self.selection.end:
-            return
-
-        start, end = self.selection
-
-        if self.mode == VimMode.VISUAL:
-            # Standard visual mode - copy selected text
-            self.copy()
-
-        elif self.mode == VimMode.VISUAL_LINE:
-            # Visual line mode - copy entire lines
-            start_row = min(start[0], end[0])
-            end_row = max(start[0], end[0])
-            self.select((start_row, 0), (end_row + 1, 0))
-            self.copy()
-
-        elif self.mode == VimMode.VISUAL_BLOCK:
-            # Visual block mode - copy block of text
-            start_row, start_col = start
-            end_row, end_col = end
-
-            # Build block text
-            block_text = []
-            left_col = min(start_col, end_col)
-            right_col = max(start_col, end_col)
-
-            for row in range(min(start_row, end_row), max(start_row, end_row) + 1):
-                if row < len(self.lines):
-                    line = self.lines[row]
-                    block_line = (
-                        line[left_col:right_col] if left_col < len(line) else ""
-                    )
-                    block_text.append(block_line)
-
-            # Join with newlines and copy to clipboard
-            self.app.clipboard = "\n".join(block_text)
-
-        # Return to normal mode
-        self.selection = Selection()  # Clear selection
+        """Copy selected text to editor clipboard."""
+        if self.selected_text:
+            self.clipboard = self.selected_text
         self.enter_normal_mode()
 
     def indent_selection(self) -> None:
@@ -123,12 +78,12 @@ class VisualMode(BaseMode):
             self.enter_normal_mode()
 
     def uppercase_selection(self) -> None:
-        """Convert selection to uppercase"""
+        """Convert selection to uppercase."""
         if self.selected_text:
             text = self.selected_text
             upper = text.upper()
-            self.delete_selection()
-            self.insert(upper)
+            start, end = self.selection
+            self.replace(upper, start, end, maintain_selection_offset=False)
             self.enter_normal_mode()
 
     def lowercase_selection(self) -> None:
@@ -136,8 +91,8 @@ class VisualMode(BaseMode):
         if self.selected_text:
             text = self.selected_text
             lower = text.lower()
-            self.delete_selection()
-            self.insert(lower)
+            start, end = self.selection
+            self.replace(lower, start, end, maintain_selection_offset=False)
             self.enter_normal_mode()
 
     def paste_over_selection(self) -> None:
@@ -151,7 +106,7 @@ class VisualMode(BaseMode):
         """Swap the cursor between start and end of selection"""
         if self.selection:
             start, end = self.selection
-            self.move_cursor(start if self.cursor_location == end else end)
+            self.move_cursor(start if self.cursor_location == end else end, select=True)
 
     def delete_block_selection(self) -> None:
         """Delete visual block selection"""
